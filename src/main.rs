@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use three_d::Event;
 use three_d::Key;
 use three_d::SurfaceSettings;
