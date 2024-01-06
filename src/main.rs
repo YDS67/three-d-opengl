@@ -13,9 +13,9 @@ mod assets;
 fn main() {
     // Create a window (a canvas on web)
     let window = Window::new(WindowSettings {
-        title: "Quad + Texture example, WASD to rotate, Esc to quit".to_string(),
-        max_size: Some((1280, 720)),
-        min_size: (1280, 720),
+        title: "Three-D example, WASD to rotate, Esc to quit".to_string(),
+        max_size: Some((900, 720)),
+        min_size: (900, 720),
         surface_settings: SurfaceSettings {
             vsync: true,
             depth_buffer: 0,
