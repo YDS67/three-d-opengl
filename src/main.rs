@@ -4,7 +4,7 @@ use three_d::Event;
 use three_d::Key;
 use three_d::SurfaceSettings;
 use three_d::core::{
-    degrees, radians, vec2, vec3, ClearState, Context, Mat4, Program, RenderStates, VertexBuffer, ElementBuffer, Srgba, Texture2D, CpuTexture, TextureData};
+    degrees, radians, vec2, vec3, vec4, ClearState, Context, Mat4, Program, RenderStates, VertexBuffer, ElementBuffer, Texture2D, CpuTexture, TextureData};
 use three_d::window::{FrameOutput, Window, WindowSettings};
 use three_d_asset::Camera;
 
@@ -13,7 +13,8 @@ mod assets;
 fn main() {
     // Create a window (a canvas on web)
     let window = Window::new(WindowSettings {
-        title: "Quand + Texture example".to_string(),
+        title: "Quad + Texture example, WASD to rotate, Esc to quit".to_string(),
+        max_size: Some((1280, 720)),
         min_size: (1280, 720),
         surface_settings: SurfaceSettings {
             vsync: true,
@@ -42,10 +43,10 @@ fn main() {
     let colors = VertexBuffer::new_with_data(
         &context,
         &[
-            Srgba::RED.to_linear_srgb(),   // top right
-            Srgba::RED.to_linear_srgb() + Srgba::GREEN.to_linear_srgb(), // bottom right
-            Srgba::BLUE.to_linear_srgb(),  // bottom left
-            Srgba::GREEN.to_linear_srgb(),  // top left
+            vec4(1.0, 0.0, 0.0, 1.0),   // top right
+            vec4(1.0, 1.0, 0.0, 1.0), // bottom right
+            vec4(0.0, 0.0, 1.0, 1.0),  // bottom left
+            vec4(0.0, 1.0, 0.0, 1.0),  // top left
         ],
     );
 
@@ -71,15 +72,13 @@ fn main() {
 
     let assets = assets::Assets::load();
 
-    let mut image = CpuTexture{
+    let image = CpuTexture{
         name: format!("tex"),
         width: assets.width,
         height: assets.height,
         data: TextureData::RgbaU8(assets.tex),
         ..Default::default()
     };
-
-    image.data.to_linear_srgb();
 
     let texture = Texture2D::new(&context, &image);
 
