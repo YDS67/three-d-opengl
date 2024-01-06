@@ -1196,6 +1196,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "three-d-opengl-example"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "three-d",
+ "three-d-asset",
+]
+
+[[package]]
 name = "tiff"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1246,15 +1255,6 @@ dependencies = [
  "indexmap",
  "toml_datetime",
  "winnow",
-]
-
-[[package]]
-name = "triangle-example"
-version = "0.1.0"
-dependencies = [
- "image",
- "three-d",
- "three-d-asset",
 ]
 
 [[package]]
