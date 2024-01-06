@@ -1,5 +1,8 @@
 in vec4 v_color;
+in vec2 v_uv;
 out vec4 fragColor;
+
+uniform sampler2D tex;
 
 vec3 srgb_from_linear_srgb(vec3 rgb) {
     vec3 a = vec3(0.055, 0.055, 0.055);
@@ -12,7 +15,9 @@ vec3 srgb_from_linear_srgb(vec3 rgb) {
     return mix(lo, hi, select);
 }
 
+vec4 tex_col;
+
 void main() {
-    fragColor = v_color;
-    fragColor.rgb = srgb_from_linear_srgb(fragColor.rgb);
+    tex_col = texture(tex, v_uv);
+    fragColor = vec4(0.5*srgb_from_linear_srgb(v_color.rgb) + 0.5*srgb_from_linear_srgb(tex_col.rgb),1.0);
 }
