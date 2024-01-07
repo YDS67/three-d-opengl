@@ -9,7 +9,7 @@ uniform sampler2D tex;
 vec4 tex_col;
 
 void main() {
-    if (length(v_pos) > 0.5) {
+    if (v_pos.x*v_pos.x*v_pos.x*v_pos.x+v_pos.y*v_pos.y*v_pos.y*v_pos.y > 0.5*0.5*0.5*0.5) {
         discard;
     } else {
         tex_col = texture(tex, v_uv);
