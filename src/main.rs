@@ -8,6 +8,11 @@ use three_d::core::{
 use three_d::window::{FrameOutput, Window, WindowSettings};
 use three_d_asset::Camera;
 
+use std::thread::sleep;
+use std::time::Duration;
+
+const FT_DESIRED: f32 = 0.01666666666667;
+
 mod assets;
 
 fn main() {
@@ -17,7 +22,7 @@ fn main() {
         max_size: Some((900, 720)),
         min_size: (900, 720),
         surface_settings: SurfaceSettings {
-            vsync: true,
+            vsync: false,
             depth_buffer: 0,
             stencil_buffer: 0,
             multisamples: 0,
@@ -107,7 +112,12 @@ fn main() {
     let mut key_s = false;
     let mut should_close = false;
 
+    let mut time_state = TimeState::init();
+
     window.render_loop(move |frame_input| {
+        time_state.frame_time();
+        time_state.show_data();
+
         camera.set_viewport(frame_input.viewport);
 
         for event in frame_input.events.iter() {
@@ -173,10 +183,51 @@ fn main() {
                 );
             });
 
+        time_state.last_frame = Some(std::time::Instant::now()).unwrap();
+
+        time_state.frame_count += 1;
+
         if should_close {
-            FrameOutput {exit: true, swap_buffers: false, wait_next_event: false}
+            return FrameOutput {exit: true, swap_buffers: false, wait_next_event: false}
         } else {
-            FrameOutput::default()
+            return FrameOutput::default()
         }
     });
 }
+
+struct TimeState {
+    last_frame: std::time::Instant,
+    frame_time: f32,
+    frame_count: u128,
+    fps: i32,
+}
+
+impl TimeState {
+    fn init() -> TimeState {
+        TimeState {
+            last_frame: Some(std::time::Instant::now()).unwrap(),
+            frame_time: 1.0 / 60.0,
+            frame_count: 0,
+            fps: 60,
+        }
+    }
+
+    fn frame_time(&mut self) {
+        self.frame_time = self.last_frame.elapsed().as_secs_f32();
+        if self.frame_time < FT_DESIRED {
+            sleep(Duration::from_secs_f32(
+                FT_DESIRED - self.frame_time,
+            ));
+        }
+        self.frame_time = self.last_frame.elapsed().as_secs_f32();
+        self.fps = (1. / self.frame_time).floor() as i32 + 1;
+    }
+    
+    fn show_data(&mut self) {
+        if self.frame_count.overflowing_rem(60).0 == 0 {
+            println!("FPS: {}, Frames: {}", 
+                self.fps, self.frame_count);
+        }
+    }
+}
+
