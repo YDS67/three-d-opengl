@@ -89,8 +89,8 @@ fn main() {
 
     let program = Program::from_source(
         &context,
-        include_str!("triangle.vert"),
-        include_str!("triangle.frag"),
+        include_str!("vertex.glsl"),
+        include_str!("fragment.glsl"),
     )
     .unwrap();
 
