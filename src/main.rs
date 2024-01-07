@@ -1,16 +1,15 @@
 #![windows_subsystem = "windows"]
 
-use three_d::Event;
-use three_d::Key;
-use three_d::SurfaceSettings;
-use three_d::core::{
-    degrees, radians, vec2, vec3, vec4, ClearState, Context, Mat4, Program, RenderStates, VertexBuffer, ElementBuffer, Texture2D, CpuTexture, TextureData};
-use three_d::window::{FrameOutput, Window, WindowSettings};
-use three_d_asset::Camera;
+use three_d::renderer::{Event, Key};
+use three_d::core::{vec2, vec3, vec4, ClearState, Context, Mat4, Program, RenderStates, VertexBuffer, ElementBuffer, Texture2D, CpuTexture, TextureData};
+use three_d::window::{FrameOutput, Window, WindowSettings, SurfaceSettings};
 
+use glam;
 use std::thread::sleep;
 use std::time::Duration;
 
+const WIDTH0: u32 = 900;
+const HEIGHT0: u32 = 720;
 const FT_DESIRED: f32 = 0.01666666666667;
 
 mod assets;
@@ -19,8 +18,8 @@ fn main() {
     // Create a window (a canvas on web)
     let window = Window::new(WindowSettings {
         title: "Three-D example, WASD to rotate, Esc to quit".to_string(),
-        max_size: Some((900, 720)),
-        min_size: (900, 720),
+        max_size: Some((WIDTH0, HEIGHT0)),
+        min_size: (WIDTH0, HEIGHT0),
         surface_settings: SurfaceSettings {
             vsync: false,
             depth_buffer: 0,
@@ -94,16 +93,6 @@ fn main() {
     )
     .unwrap();
 
-    let mut camera = Camera::new_perspective(
-        window.viewport(),
-        vec3(0.0, 0.0, 2.0),
-        vec3(0.0, 0.0, 0.0),
-        vec3(0.0, 1.0, 0.0),
-        degrees(45.0),
-        0.1,
-        10.0,
-    );
-
     let mut anglex = 0.0;
     let mut angley = 0.0;
     let mut key_a = false;
@@ -117,8 +106,7 @@ fn main() {
     window.render_loop(move |frame_input| {
         time_state.frame_time();
         time_state.show_data();
-
-        camera.set_viewport(frame_input.viewport);
+        let proj = Proj::new(anglex, angley, WIDTH0 as f32/HEIGHT0 as f32);
 
         for event in frame_input.events.iter() {
             match event {
@@ -159,19 +147,19 @@ fn main() {
             .clear(ClearState::color_and_depth(0.8, 0.8, 0.8, 1.0, 1.0))
             .write(|| {
                 if key_a {
-                    anglex += 1.0;
+                    anglex += 5.0*time_state.frame_time;
                 }
                 if key_d {
-                    anglex -= 1.0;
+                    anglex -= 5.0*time_state.frame_time;
                 }
                 if key_w {
-                    angley += 1.0;
+                    angley += 5.0*time_state.frame_time;
                 }
                 if key_s {
-                    angley -= 1.0;
+                    angley -= 5.0*time_state.frame_time;
                 }
-                program.use_uniform("model", Mat4::from_angle_y(radians(anglex*0.05))*Mat4::from_angle_z(radians(angley*0.05)));
-                program.use_uniform("viewProjection", camera.projection() * camera.view());
+
+                program.use_uniform("viewProjection", proj.mvp);
                 program.use_vertex_attribute("position", &positions);
                 program.use_vertex_attribute("color", &colors);
                 program.use_vertex_attribute("uv", &uvs);
@@ -231,3 +219,35 @@ impl TimeState {
     }
 }
 
+struct Proj {
+    mvp: Mat4,
+}
+
+impl Proj {
+    fn new(angle_x: f32, angle_y: f32, asp: f32) -> Proj {
+        let proj = glam::Mat4::perspective_rh_gl(
+            45.0/180.0*3.14159,
+            asp,
+            0.1,
+            10.0,
+        );
+
+        let rotx = glam::Mat4::from_rotation_y(angle_x);
+        let roty = glam::Mat4::from_rotation_z(angle_y);
+
+        let view = glam::Mat4::look_to_rh(
+            glam::vec3(0.0, 0.0, 2.0),
+            glam::vec3(0.0, 0.0, -1.0),
+            glam::vec3(0.0, 1.0, 0.0),
+        );
+        let mvp_glam = proj * view * rotx * roty;
+        let mvp = Mat4{
+            x: vec4(mvp_glam.x_axis.x, mvp_glam.x_axis.y, mvp_glam.x_axis.z, mvp_glam.x_axis.w),
+            y: vec4(mvp_glam.y_axis.x, mvp_glam.y_axis.y, mvp_glam.y_axis.z, mvp_glam.y_axis.w),
+            z: vec4(mvp_glam.z_axis.x, mvp_glam.z_axis.y, mvp_glam.z_axis.z, mvp_glam.z_axis.w),
+            w: vec4(mvp_glam.w_axis.x, mvp_glam.w_axis.y, mvp_glam.w_axis.z, mvp_glam.w_axis.w),
+        };
+
+        Proj { mvp }
+    }
+}
